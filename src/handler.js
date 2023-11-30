@@ -10,7 +10,6 @@ const addBooksHandler = (request, h) => {
     const updateAt = insertedAt
 
     const existingBook = books.find((book) => book.name !== name) //sebelumnya !==
-
     if(existingBook) {
         const response = h.response ({
             status: 'fail',
@@ -21,7 +20,6 @@ const addBooksHandler = (request, h) => {
     }
 
     const failedReadPage = readPage > pageCount
-
     if(failedReadPage) {
         const response = h.response ({
             status: 'fail',
@@ -85,35 +83,12 @@ const getAllBooksHandler = (request, h) => {
     return response
 }
 
-
-//API dapat menampilkan detail buku
-// const getAllBooksByIdHandler = (request, h) => {
-//     const { bookId } = request.params
-//     const detailsBookId = books.find((book) => book.id === parseInt(bookId))
-   
-//     if (!detailsBookId) {
-//        const response = h.response({
-//          status: 'fail',
-//          message: 'Buku tidak ditemukan',
-//        })
-//        response.code(404)
-//        return response
-//     }
-   
-//     const response = h.response({
-//        status: 'success',
-//        data: {
-//          detailsBookId,
-//        },
-//     })
-//     response.code(200)
-//     return response
-//    }
+//API dapat menampilkan buku secara detail
 const getAllBooksByIdHandler = (request, h) => {
     const { bookId } = request.params
-    const detailsBookId = books.find((book) => book.id === bookId)//books.filter
+    const book = books.filter((book) => book.id === bookId)[0] //detailsBookId
 
-    if(!detailsBookId) {
+    if(!book) {
         const response = h.response ({
             status: 'fail',
             message: 'Buku tidak ditemukan'
@@ -121,15 +96,16 @@ const getAllBooksByIdHandler = (request, h) => {
         response.code(404)
         return response
     } 
-        const response = h.response ({
+    const response = h.response ({
         status: 'success',
         data: {
-            detailsBookId
+            book
         }
     })
     response.code(200)
     return response
 }
+
 
 //API dapat mengubah data buku
 const changeBooksByIdHandler = (request, h) => {
@@ -140,7 +116,7 @@ const changeBooksByIdHandler = (request, h) => {
     if(noNameBookFailed) { 
         const response = h.response ({
             status: 'fail',
-            message: 'Gagal meperbarui buku. Mohon isi nama buku'
+            message: 'Gagal memperbarui buku. Mohon isi nama buku'
         })
         response.code(400)
         return response
@@ -156,8 +132,8 @@ const changeBooksByIdHandler = (request, h) => {
         return response
     }
 
-    const bookIdFailed = books.find((book) => book.id === bookId)
-    if(!bookIdFailed) {
+    const bookToUpdate = books.find((book) => book.id === bookId)
+    if(!bookToUpdate) {
         const response = h.response ({
             status: 'fail',
             message: 'Gagal memperbarui buku. Id tidak ditemukan'
@@ -177,16 +153,13 @@ const changeBooksByIdHandler = (request, h) => {
             publisher,
             pageCount,
             readPage,
-            reading
+            reading,
         }
-        const response = h.response ({
+        return h.response ({
             status: 'success',
             message: 'Buku berhasil diperbarui'
-        })
-        response.code(200)
-        return response
+        }).code(200)
     }
-
 }
 
 //API dapat menghapus buku
@@ -194,7 +167,7 @@ const deleteBooksByIdHandler = (request, h) => {
     const { bookId } = request.params
 
     const bookIdFailed1 = books.find((book) => book.id === bookId)
-    if(!bookIdFailed1) { //!
+    if(!bookIdFailed1) { 
         const response = h.response ({
             status: 'fail',
             message: 'Buku gagal dihapus. Id tidak ditemukan'
