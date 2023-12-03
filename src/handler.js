@@ -3,13 +3,13 @@ const books = require('./books')
 
 //API dapat menyimpan buku
 const addBooksHandler = (request, h) => {
-    const { name, year, author, summary, publisher, pageCount, readPage, reading } = request.payload
+    const { name, year, author, summary, publisher, pageCount, readPage, reading,  } = request.payload
     const id = nanoid(16)
     const finished = pageCount === readPage
-    const insertedAt = new Date().toISOString
-    const updateAt = insertedAt
+    const insertedAt = new Date().toISOString()
+    const updatedAt = insertedAt
 
-    const existingBook = books.find((book) => book.name !== name) //sebelumnya !==
+    const existingBook = books.find((book) => book.name !== name)
     if(existingBook) {
         const response = h.response ({
             status: 'fail',
@@ -30,7 +30,18 @@ const addBooksHandler = (request, h) => {
     }
 
     const newBook = {
-        id, name, year, author, summary, publisher, pageCount, readPage, finished, reading, insertedAt, updateAt
+        id, 
+        name, 
+        year, 
+        author, 
+        summary, 
+        publisher, 
+        pageCount, 
+        readPage, 
+        finished, 
+        reading, 
+        insertedAt, 
+        updatedAt,
     }
 
     books.push(newBook)
@@ -54,23 +65,27 @@ const addBooksHandler = (request, h) => {
 const getAllBooksHandler = (request, h) => {
     const { reading, name, finished } = request.query
 
-    let filteredBooks = books.map((book) => ({
+    let filteredBooks = books
+
+    if (reading !== undefined) {
+        const thisReading = reading === '1'
+        filteredBooks = books.filter((book) => book.reading === '1')
+    }
+    
+    if (finished !== undefined) {
+        const thisFinished = finished === '1'
+        filteredBooks = books.filter((book) => book.finished === '1')
+    }
+
+    if (name !== undefined) {
+        filteredBooks = books.filter((book) => book.name.toLowerCase().includes(name.toLowerCase()))
+    }
+
+    filteredBooks = books.map((book) => ({
         id: book.id,
         name: book.name,
         publisher: book.publisher
     }))
-
-    if (reading !== undefined) {
-        filteredBooks = filteredBooks.filter((book) => book.reading === reading)
-    }
-
-    if (finished !== undefined) {
-        filteredBooks = filteredBooks.filter((book) => book.finished === finished)
-    }
-
-    if (name !== undefined) {
-        filteredBooks = filteredBooks.filter((book) => book.name.toLowerCase().includes(name.toLowerCase()))
-    }
 
     const response = h.response({
         status: 'success',
@@ -86,31 +101,30 @@ const getAllBooksHandler = (request, h) => {
 //API dapat menampilkan buku secara detail
 const getAllBooksByIdHandler = (request, h) => {
     const { bookId } = request.params
-    const book = books.filter((book) => book.id === bookId)[0] //detailsBookId
+    const book = books.filter((n) => n.id === bookId)[0]
 
-    if(!book) {
-        const response = h.response ({
-            status: 'fail',
-            message: 'Buku tidak ditemukan'
-        })
-        response.code(404)
-        return response
-    } 
-    const response = h.response ({
-        status: 'success',
-        data: {
-            book
+    if (book !== undefined) {
+        return {
+            status: 'success',
+            data: {
+                book
+            }
         }
+    }
+    const response = h.response ({
+        status: 'fail',
+        message: 'Buku tidak ditemukan'
     })
-    response.code(200)
+    response.code(404)
     return response
 }
 
 
 //API dapat mengubah data buku
-const changeBooksByIdHandler = (request, h) => {
+const editBooksByIdHandler = (request, h) => {
     const { bookId } = request.params
     const { name, year, author, summary, publisher, pageCount, readPage, reading } = request.payload
+    const updatedAt = new Date().toISOString()
 
     const noNameBookFailed = name === undefined
     if(noNameBookFailed) { 
@@ -154,6 +168,7 @@ const changeBooksByIdHandler = (request, h) => {
             pageCount,
             readPage,
             reading,
+            updatedAt,
         }
         return h.response ({
             status: 'success',
@@ -166,8 +181,8 @@ const changeBooksByIdHandler = (request, h) => {
 const deleteBooksByIdHandler = (request, h) => {
     const { bookId } = request.params
 
-    const bookIdFailed1 = books.find((book) => book.id === bookId)
-    if(!bookIdFailed1) { 
+    const failId = books.find((book) => book.id === bookId)
+    if(!failId) { 
         const response = h.response ({
             status: 'fail',
             message: 'Buku gagal dihapus. Id tidak ditemukan'
@@ -188,5 +203,4 @@ const deleteBooksByIdHandler = (request, h) => {
     }
 }
 
-
-module.exports = {addBooksHandler, getAllBooksHandler, getAllBooksByIdHandler, changeBooksByIdHandler, deleteBooksByIdHandler}
+module.exports = {addBooksHandler, getAllBooksHandler, getAllBooksByIdHandler, editBooksByIdHandler, deleteBooksByIdHandler}
